@@ -1,6 +1,7 @@
 # code-challenge1
 
-Code challenge no.1 - Create a Guestbook 
+Code challenge no.1 - Create a Guestbook.
+
 You find all the information about the challenge in Notion, Github is only used to make code reviews on each other.  
 
 1. Fork this project
