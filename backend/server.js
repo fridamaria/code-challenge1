@@ -2,6 +2,8 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import mongoose from 'mongoose'
+import bcrypt from 'bcrypt-nodejs'
+import User from './models/user'
 
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/code-challenge1"
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -22,13 +24,38 @@ app.use((req, res, next) => {
   }
 })
 
+// Messages
+const USER_CREATED = 'User created.'
+const ERR_CREATE_USER = 'Could not create user.'
+
 // Start defining your routes here
 app.get('/', (req, res) => {
   res.send('Hello world')
 })
 
-app.get('/messages', async (req, res) => {
-  con
+// Sign up
+app.post('/users', async (req, res) => {
+  const { name, email, password } = req.body
+  const encryptedPassword = bcrypt.hashSync(password)
+
+  try {
+    const user = new User({
+      name,
+      email,
+      password: encryptedPassword,
+    })
+    const newUser = await user.save()
+
+    res.status(201).json({
+      message: USER_CREATED,
+      user: newUser
+    })
+  } catch (err) {
+    res.status(400).json({
+      message: ERR_CREATE_USER,
+      errors: err.errors
+    })
+  }
 })
 
 // Start the server
