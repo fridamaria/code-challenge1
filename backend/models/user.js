@@ -21,10 +21,10 @@ const UserSchema = new Schema({
     required: true,
     minlength: 6
   },
-  /* messages: {
+  messages: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'message'
-  }, */
+    ref: 'Message'
+  }],
   accessToken: {
     type: String,
     default: () => crypto.randomBytes(128).toString('hex')
