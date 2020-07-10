@@ -58,6 +58,21 @@ app.post('/users', async (req, res) => {
   }
 })
 
+// Login existing user
+app.post('/sessions', async (req, res) => {
+  const user = await User.findOne({ email: req.body.email })
+  /* .populate({
+    path: 'messages',
+    select: ''
+  }) */
+
+  if (user && bcrypt.compareSync(req.body.password, user.password)) {
+    res.json(user)
+  } else {
+    res.status(400).json({ notFound: true })
+  }
+})
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`)
