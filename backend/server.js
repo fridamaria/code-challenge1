@@ -10,6 +10,16 @@ const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/code-challenge1"
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
 mongoose.Promise = Promise
 
+const authenticateUser = async (req, res, next) => {
+  const user = await User.findOne({ accessToken: req.header('Authorization') })
+  if (user) {
+    req.user = user
+    next()
+  } else {
+    res.status(401).json({ loggedOut: true })
+  }
+}
+
 // Defines the port the app will run on. Defaults to 8080.
 const port = process.env.PORT || 8080
 const app = express()
@@ -30,6 +40,8 @@ const USER_CREATED = 'User created.'
 const ERR_CREATE_USER = 'Could not create user.'
 const ERR_NO_MESSAGES = 'There are no messages yet'
 const ERR_GET_MESSAGES = 'Could not get messages'
+const MESSAGE_CREATED = 'Message created'
+const ERR_CREATE_MESSAGE = 'Could not create message'
 
 // Start defining your routes here
 app.get('/', (req, res) => {
@@ -54,6 +66,45 @@ app.get('/messages', async (req, res) => {
     }
   } catch {
     res.status(400).json({ message: ERR_GET_MESSAGES })
+  }
+})
+
+// Post messages
+app.post('/messages', authenticateUser)
+app.post('/messages', async (req, res) => {
+  const {
+    message,
+    userId
+  } = req.body
+
+  const user = await User.findOne({ _id: userId })
+
+  try {
+    const postMessage = await new Message({ message, createdBy: user })
+    postMessage.save((err, postMessage) => {
+      if (postMessage) {
+        res.status(201).json({
+          status: MESSAGE_CREATED,
+          message: postMessage
+        })
+      } else {
+        res.status(400).json({
+          status: ERR_CREATE_MESSAGE,
+          errors: err.errors
+        })
+      }
+    })
+    await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $push: { messages: postMessage._id }
+      }
+    )
+  } catch (err) {
+    res.status(400).json({
+      status: ERR_CREATE_MESSAGE,
+      errors: err.errors
+    })
   }
 })
 
