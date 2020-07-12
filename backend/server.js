@@ -5,6 +5,7 @@ import mongoose from 'mongoose'
 import bcrypt from 'bcrypt-nodejs'
 import User from './models/user'
 import Message from './models/message'
+import e from 'cors'
 
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/code-challenge1"
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -42,6 +43,7 @@ const ERR_NO_MESSAGES = 'There are no messages yet'
 const ERR_GET_MESSAGES = 'Could not get messages'
 const MESSAGE_CREATED = 'Message created'
 const ERR_CREATE_MESSAGE = 'Could not create message'
+const ERR_UPDATE_MESSAGE = 'Could not update message'
 
 // Start defining your routes here
 app.get('/', (req, res) => {
@@ -105,6 +107,32 @@ app.post('/messages', async (req, res) => {
       status: ERR_CREATE_MESSAGE,
       errors: err.errors
     })
+  }
+})
+
+// Update message
+app.put('/users/:userId/messages/:messageId', authenticateUser)
+app.put('/users/:userId/messages/:messageId', async (req, res) => {
+  const { userId, messageId } = req.params
+  const {
+    newMessage
+  } = req.body
+
+  try {
+    const message = await Message.findOne({ _id: messageId })
+
+    if (message.createdBy.toString() === userId.toString()) {
+      const updateMessage = await Message.findOneAndUpdate(
+        { _id: messageId },
+        { message: newMessage },
+        { new: true }
+      )
+      res.status(201).json(updateMessage)
+    } else {
+      res.status(400).json({ status: ERR_UPDATE_MESSAGE })
+    }
+  } catch (err) {
+    res.status(400).json({ status: ERR_UPDATE_MESSAGE })
   }
 })
 
