@@ -44,6 +44,8 @@ const ERR_GET_MESSAGES = 'Could not get messages'
 const MESSAGE_CREATED = 'Message created'
 const ERR_CREATE_MESSAGE = 'Could not create message'
 const ERR_UPDATE_MESSAGE = 'Could not update message'
+const MESSAGE_DELETED = 'Message deleted'
+const ERR_DELETE_MESSAGE = 'Could not delete message'
 
 // Start defining your routes here
 app.get('/', (req, res) => {
@@ -98,9 +100,7 @@ app.post('/messages', async (req, res) => {
     })
     await User.findOneAndUpdate(
       { _id: userId },
-      {
-        $push: { messages: postMessage._id }
-      }
+      { $push: { messages: postMessage._id } }
     )
   } catch (err) {
     res.status(400).json({
@@ -133,6 +133,30 @@ app.put('/users/:userId/messages/:messageId', async (req, res) => {
     }
   } catch (err) {
     res.status(400).json({ status: ERR_UPDATE_MESSAGE })
+  }
+})
+
+// Delete message
+app.delete('/users/:userId/messages/:messageId', authenticateUser)
+app.delete('/users/:userId/messages/:messageId', async (req, res) => {
+  const { userId, messageId } = req.params
+
+  try {
+    const message = await Message.findOne({ _id: messageId })
+
+    if (message.createdBy.toString() === userId.toString()) {
+      await Message.findOneAndDelete({ _id: messageId })
+      res.status(200).json({ status: MESSAGE_DELETED })
+      await User.findOneAndUpdate(
+        { _id: userId },
+        { $pull: { messages: messageId } }
+      )
+    }
+  } catch (err) {
+    res.status(400).json({
+      message: ERR_DELETE_MESSAGE,
+      errors: err.errors
+    })
   }
 })
 
