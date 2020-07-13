@@ -37,3 +37,31 @@ export const user = createSlice({
     logout: () => { return initialState }
   }
 })
+
+// Thunk to login
+export const login = (email, password) => {
+  const LOGIN_URL = 'http://localhost:8080/sessions'
+  return (dispatch) => {
+    fetch(LOGIN_URL, {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+      .then((res) => {
+        if (res.ok) {
+          return res.json()
+        }
+        throw new Error('Kan inte logga in')
+      })
+      .then((json) => {
+        dispatch(user.actions.setAccessToken({ accessToken: json.accessToken }))
+        dispatch(user.actions.setUserId({ userId: json._id }))
+        dispatch(user.actions.setName({ name: json.name }))
+        dispatch(user.actions.setMessages({ messages: json.messages }))
+        dispatch(user.actions.setLikes({ likes: json.likes }))
+      })
+      .catch((err) => {
+        dispatch(user.actions.setErrorMessage({ errorMessage: err }))
+      })
+  }
+}
