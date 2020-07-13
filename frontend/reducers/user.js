@@ -6,7 +6,8 @@ const initialState = {
     userId: null,
     name: null,
     messages: [],
-    likes: []
+    likes: [],
+    errorMessage: null,
   }
 }
 
@@ -59,6 +60,40 @@ export const login = (email, password) => {
         dispatch(user.actions.setName({ name: json.name }))
         dispatch(user.actions.setMessages({ messages: json.messages }))
         dispatch(user.actions.setLikes({ likes: json.likes }))
+      })
+      .catch((err) => {
+        dispatch(user.actions.setErrorMessage({ errorMessage: err }))
+      })
+  }
+}
+
+// Thunk to sign up
+export const signup = (
+  name,
+  email,
+  password
+) => {
+  const SIGNUP_URL = 'http://localhost:8080/users'
+  return (dispatch) => {
+    fetch(SIGNUP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        name,
+        email,
+        password
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Kunde inte registrera konto.')
+        }
+        return res.json()
+      })
+      .then((json) => {
+        dispatch(user.actions.setAccessToken({ accessToken: json.accessToken }))
+        dispatch(user.actions.setUserId({ userId: json._id }))
+        dispatch(user.actions.setName({ name: json.name }))
       })
       .catch((err) => {
         dispatch(user.actions.setErrorMessage({ errorMessage: err }))
