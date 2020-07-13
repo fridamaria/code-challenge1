@@ -29,7 +29,7 @@ export const user = createSlice({
     },
     setMessages: (state, action) => {
       const { messages } = action.payload
-      state.userInformation.messages
+      state.userInformation.messages = messages
     },
     setLikes: (state, action) => {
       const { likes } = action.payload
